@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 5000;
 
 //middleware
 app.use((req,res,next)=>{   
-    console.log(req.method,req.url,req.body)
+    console.log(req.method,req.url)
     next()
 })
 
@@ -82,7 +82,52 @@ app.get("/scrapeSCL", async (req, res) => {
 });
 
 app.get("/scrapePCS",async (req,res)=>{
+    try {
+        const query = req.query.searchQ || "DDR5 16GB 6000MHz CL30";
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+        let pageCount = 0
+        let finalProductDetails = []
+        await page.goto("https://www.pcstudio.in/");
+        console.log(query);
+        await page.click(".dgwt-wcas-search-wrapp")
+        await page.type("input#dgwt-wcas-search-input-1", query);
+        await page.keyboard.press("Enter");
+        await page.screenshot({ path: "pcsgamingb.png" });
+        await page.waitForSelector("div.product-inner.clr");
+        await page.screenshot({ path: "pcsgaminga.png" });
 
+        // Begin scraping name & price
+        while(true){
+            const productDetails = await page.evaluate(()=>{
+                const productElements = document.querySelectorAll("div.product-inner.clr")
+                return Array.from(productElements).map((productElement)=>{
+                    const name = productElement.querySelector("h2 a span").title || "no Name"
+                    const price = productElement.querySelector("span.price ins").innerText || "no Price"
+                    return {name,price}
+                })
+            })
+
+            finalProductDetails = [...finalProductDetails,...productDetails]
+
+            try {
+                await page.click("a.next.page-numbers")
+                await page.waitForNavigation()
+                ++pageCount
+            } catch (error) {
+                console.log("no next button found")
+                break;
+            }
+        }
+
+        res.status(200).json(finalProductDetails)
+    }
+    catch(error){
+        if(error.message.includes("div.product-inner.clr")){
+            res.status(200).send([])
+        }
+        res.status(500).send("error scraping PC Studio: " + error.message)
+    }
 });
 
 app.use("/usedb",dbroutes)

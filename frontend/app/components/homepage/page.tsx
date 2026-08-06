@@ -11,7 +11,10 @@ const Homepage = () => {
   const [searchQuery, setSearchQuery] = useState(searchQ);
   const [isLoading, setIsLoading] = useState(false);
   const [combinedProducts, setCombinedProducts] = useState<CombinedProduct[]>([]);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortOrder0, setSortOrder0] = useState<'asc' | 'desc'>('asc');
+  const [sortOrder1, setSortOrder1] = useState<'asc' | 'desc'>('asc');
+  const [sortOrder2, setSortOrder2] = useState<'asc' | 'desc'>('asc');
+  const [sortOrder3, setSortOrder3] = useState<'asc' | 'desc'>('asc');
 
   type CombinedProduct = {
     scl: { name: string; price: string };
@@ -23,22 +26,24 @@ const Homepage = () => {
         // console.log(`http://localhost:5000/scrapeSCL?searchQ=${encodeURIComponent(searchQuery)}`);
         setIsLoading(true);
 
-        const data = await fetch(`http://localhost:5000/scrapeSCL?searchQ=${encodeURIComponent(searchQuery)}`).then(async (res) => {
-          setIsLoading(false);
-          if (res.status === 200)
-            return res.json();
-          else
-          {
-            const errorText = await res.text();
-            console.log(errorText)
-            return []
-          }
-        })
-        .catch((error)=>{console.log(error)});
+        const data1 = await fetch(`http://localhost:5000/scrapeSCL?searchQ=${encodeURIComponent(searchQuery)}`)
+        const data2 = await fetch(`http://localhost:5000/scrapePCS?searchQ=${encodeURIComponent(searchQuery)}`)
+        setIsLoading(false);
 
-        setSCLProducts(data);
-        setPCStudioProducts([{ name: "test1", price: "0" }, { name: "test2", price: "10" }]);
-        // console.log("Fetched sclProducts:", data);
+        if (data1.status === 200 && data2.status === 200){
+          const SCLProduct = await data1.json()
+          const PCSProduct = await data2.json()
+          console.log(SCLProduct)
+          console.log("----------------------------------")
+          console.log(PCSProduct)
+          setSCLProducts(SCLProduct)
+          setPCStudioProducts(PCSProduct);
+        }
+        else{
+          const errorText = await data2.text();
+          console.log("error while fetching PCS: ",errorText)
+        }
+        
       } catch (error) {
         console.error("Error fetching sclProducts:", error);
       }
@@ -47,22 +52,41 @@ const Homepage = () => {
     function sortProduct(e: React.MouseEvent<HTMLTableCellElement, MouseEvent>) {
       const columnIndex = e.currentTarget.cellIndex;
       console.log(`Sorting column index: ${columnIndex}`);
-      if (columnIndex === 1 || columnIndex === 3) {
-        if (sortOrder === 'asc') {
-          setSCLProducts([...sclProducts].sort((a, b) => parseFloat(a.price.split("₹")[1]) - parseFloat(b.price.split("₹")[1])));
-          setSortOrder('desc');
-        } else {
-          setSCLProducts([...sclProducts].sort((a, b) => parseFloat(b.price.split("₹")[1]) - parseFloat(a.price.split("₹")[1])));
-          setSortOrder('asc');
-        }
-      }
-      else{
-        if (sortOrder === 'asc') {
+      if (columnIndex === 0) {
+        if (sortOrder0 === 'asc') {
           setSCLProducts([...sclProducts].sort((a, b) => a.name.localeCompare(b.name)));
-          setSortOrder('desc');
+          setSortOrder0('desc');
         } else {
           setSCLProducts([...sclProducts].sort((a, b) => b.name.localeCompare(a.name)));
-          setSortOrder('asc');
+          setSortOrder0('asc');
+        }
+      }
+      else if (columnIndex === 1) {
+        if (sortOrder1 === 'asc') {
+          setSCLProducts([...sclProducts].sort((a, b) => parseFloat(a.price.split("₹")[1]) - parseFloat(b.price.split("₹")[1])));
+          setSortOrder1('desc');
+        } else {
+          setSCLProducts([...sclProducts].sort((a, b) => parseFloat(b.price.split("₹")[1]) - parseFloat(a.price.split("₹")[1])));
+          setSortOrder1('asc');
+        }
+      }
+      else if (columnIndex === 2) {
+        if (sortOrder2 === 'asc') {
+          setPCStudioProducts([...pcStudioProducts].sort((a, b) => a.name.localeCompare(b.name)));
+          setSortOrder2('desc');
+        }
+        else {
+          setPCStudioProducts([...pcStudioProducts].sort((a, b) => b.name.localeCompare(a.name)));
+          setSortOrder2('asc');
+        }
+      }
+      else if (columnIndex === 3) {
+        if (sortOrder3 === 'asc') {
+          setPCStudioProducts([...pcStudioProducts].sort((a, b) => parseFloat(a.price.split("₹")[1]) - parseFloat(b.price.split("₹")[1])));
+          setSortOrder3('desc');
+        } else {
+          setPCStudioProducts([...pcStudioProducts].sort((a, b) => parseFloat(b.price.split("₹")[1]) - parseFloat(a.price.split("₹")[1])));
+          setSortOrder3('asc');
         }
       }
     }
@@ -101,10 +125,10 @@ const Homepage = () => {
               <th className='border-2 border-amber-50 p-2 text-amber-500' colSpan={2}>PC Studio</th>
             </tr>
             <tr>
-              <th className='border-2 border-amber-50 p-2 cursor-pointer hover:select-none'>Name</th>
-              <th className='border-2 border-amber-50 p-2 cursor-pointer hover:select-none' onClick={(e)=>{sortProduct(e)}}>Price</th>
-              <th className='border-2 border-amber-50 p-2 cursor-pointer hover:select-none'>Name</th>
-              <th className='border-2 border-amber-50 p-2 cursor-pointer hover:select-none'>Price</th>
+              <th className='border-2 border-amber-50 p-2 cursor-pointer hover:select-none hover:text-cyan-500' onClick={(e)=>{sortProduct(e)}}>Name</th>
+              <th className='border-2 border-amber-50 p-2 cursor-pointer hover:select-none hover:text-cyan-500' onClick={(e)=>{sortProduct(e)}}>Price</th>
+              <th className='border-2 border-amber-50 p-2 cursor-pointer hover:select-none hover:text-cyan-500' onClick={(e)=>{sortProduct(e)}}>Name</th>
+              <th className='border-2 border-amber-50 p-2 cursor-pointer hover:select-none hover:text-cyan-500' onClick={(e)=>{sortProduct(e)}}>Price</th>
             </tr>
           </thead>
           <tbody>
