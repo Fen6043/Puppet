@@ -28,7 +28,7 @@ const Homepage = () => {
 
         const data1 = await fetch(`http://localhost:5000/scrapeSCL?searchQ=${encodeURIComponent(searchQuery)}`)
         const data2 = await fetch(`http://localhost:5000/scrapePCS?searchQ=${encodeURIComponent(searchQuery)}`)
-        setIsLoading(false);
+
 
         if (data1.status === 200 && data2.status === 200){
           const SCLProduct = await data1.json()
@@ -43,6 +43,8 @@ const Homepage = () => {
           const errorText = await data2.text();
           console.log("error while fetching PCS: ",errorText)
         }
+
+        setIsLoading(false);
         
       } catch (error) {
         console.error("Error fetching sclProducts:", error);
